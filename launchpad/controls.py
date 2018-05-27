@@ -1,4 +1,7 @@
+from collections import OrderedDict
+
 from buttons import ButtonGroup
+from colors import Color
 
 
 class Control(object):
@@ -68,12 +71,19 @@ class Slider(Control):
     O_HZ = 1
     O_VT = 2
 
-    def __init__(self, lp, position, orientation, off_color, on_color, callback):
+    def __init__(self, lp, position, orientation, off_color, on_colors, callback):
         self.position = position
         self.orientation = orientation
         self.off_color = off_color
-        self.on_color = on_color
+        self.on_colors = on_colors
         self.callback = callback
+
+        if isinstance(self.on_colors, Color):
+            self.on_colors = OrderedDict([(i, self.on_colors) for i in range(8)])
+        elif isinstance(self.on_colors, list):
+            self.on_colors = OrderedDict([(i, self.on_colors[int(i / len(self.on_colors))]) for i in range(8)])
+        else:
+            self.on_colors = OrderedDict(self.on_colors.items())
 
         if self.orientation == self.O_HZ:
             buttons = ButtonGroup(0, self.position, 7, self.position)
@@ -93,7 +103,11 @@ class Slider(Control):
             off = 0, 7 - self.value
 
         for i in range(*on):
-            self.set_color(self.buttons[i][0], self.buttons[i][1], self.on_color)
+            if self.orientation == self.O_VT:
+                color_i = 7 - i
+            else:
+                color_i = i
+            self.set_color(self.buttons[i][0], self.buttons[i][1], self.on_colors[color_i])
         for i in range(*off):
             self.set_color(self.buttons[i][0], self.buttons[i][1], self.off_color)
 
